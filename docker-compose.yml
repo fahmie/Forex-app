@@ -1,0 +1,80 @@
+# docker-compose.yml
+version: "3.8"
+
+services:
+    # MySQL Database
+    mysql:
+        image: mysql:8.0
+        container_name: forex_mysql
+        restart: unless-stopped
+        environment:
+            MYSQL_DATABASE: forex_db
+            MYSQL_ROOT_PASSWORD: rootpassword
+            MYSQL_USER: forex_user
+            MYSQL_PASSWORD: forex_password
+        ports:
+            - "3306:3306"
+        volumes:
+            - mysql_data:/var/lib/mysql
+        networks:
+            - forex_network
+
+    # Laravel Backend
+    backend:
+        build:
+            context: ./backend
+            dockerfile: Dockerfile.backend
+        container_name: forex_backend
+        restart: unless-stopped
+        ports:
+            - "8000:80"
+        environment:
+            - APP_ENV=production
+            - APP_DEBUG=false
+            - DB_CONNECTION=mysql
+            - DB_HOST=mysql
+            - DB_PORT=3306
+            - DB_DATABASE=forex_db
+            - DB_USERNAME=forex_user
+            - DB_PASSWORD=forex_password
+        depends_on:
+            - mysql
+        volumes:
+            - ./backend:/var/www
+            - /var/www/vendor
+            - /var/www/node_modules
+        networks:
+            - forex_network
+
+    # React Frontend
+    frontend:
+        build:
+            context: ./frontend
+            dockerfile: Dockerfile.frontend
+        container_name: forex_frontend
+        restart: unless-stopped
+        ports:
+            - "3000:80"
+        environment:
+            - REACT_APP_API_URL=http://localhost:8000/api
+        depends_on:
+            - backend
+        networks:
+            - forex_network
+
+    # Redis for caching (optional)
+    redis:
+        image: redis:7-alpine
+        container_name: forex_redis
+        restart: unless-stopped
+        ports:
+            - "6379:6379"
+        networks:
+            - forex_network
+
+volumes:
+    mysql_data:
+
+networks:
+    forex_network:
+        driver: bridge

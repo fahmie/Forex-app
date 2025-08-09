@@ -1,0 +1,12 @@
+@import "tailwindcss";
+@source "./index.html";
+@source "./src/**/*.{ts,tsx,js,jsx}";
+/* pastikan asas ni je untuk elak konflik */
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  margin: 0;
+}
