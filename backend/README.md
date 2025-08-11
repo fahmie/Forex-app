@@ -11,13 +11,13 @@
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+-   [Simple, fast routing engine](https://laravel.com/docs/routing).
+-   [Powerful dependency injection container](https://laravel.com/docs/container).
+-   Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
+-   Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
+-   Database agnostic [schema migrations](https://laravel.com/docs/migrations).
+-   [Robust background job processing](https://laravel.com/docs/queues).
+-   [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
 
 Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
@@ -35,14 +35,14 @@ We would like to extend our thanks to the following sponsors for funding Laravel
 
 ### Premium Partners
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+-   **[Vehikl](https://vehikl.com)**
+-   **[Tighten Co.](https://tighten.co)**
+-   **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
+-   **[64 Robots](https://64robots.com)**
+-   **[Curotec](https://www.curotec.com/services/technologies/laravel)**
+-   **[DevSquad](https://devsquad.com/hire-laravel-developers)**
+-   **[Redberry](https://redberry.international/laravel-development)**
+-   **[Active Logic](https://activelogic.com)**
 
 ## Contributing
 
@@ -59,3 +59,64 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+# Forex App Backend
+
+## Setup Database
+
+### 1. Jalankan Migration
+
+```bash
+php artisan migrate
+```
+
+### 2. Jalankan Seeder
+
+```bash
+php artisan db:seed
+```
+
+Atau jalankan seeder tertentu:
+
+```bash
+php artisan db:seed --class=CurrencySeeder
+php artisan db:seed --class=ExchangeRateSeeder
+```
+
+### 3. Reset Database (Optional)
+
+Jika ingin reset database dan jalankan ulang:
+
+```bash
+php artisan migrate:fresh --seed
+```
+
+## Struktur Database
+
+### Tabel yang Dibuat:
+
+1. **currencies** - Data mata uang
+2. **exchange_rates** - Data kurs mata uang
+3. **currency_conversions** - Riwayat konversi mata uang
+
+### Model yang Tersedia:
+
+1. **Currency** - Model untuk mata uang
+2. **ExchangeRate** - Model untuk kurs mata uang
+3. **CurrencyConversion** - Model untuk riwayat konversi
+
+## API Endpoints
+
+-   `GET /api/currencies` - Daftar mata uang
+-   `GET /api/rates` - Kurs mata uang saat ini
+-   `GET /api/rates/{date}` - Kurs mata uang berdasarkan tanggal
+-   `POST /api/convert` - Konversi mata uang
+-   `GET /api/history/{from}/{to}` - Data historis pasangan mata uang
+
+## Testing
+
+Jalankan test dengan:
+
+```bash
+php artisan test
+```

@@ -14,6 +14,38 @@ class ForexController extends Controller
     public function __construct(ForexService $forexService)
     {
         $this->forexService = $forexService;
+
+        // Add CORS headers to all responses
+        $this->addCorsHeaders();
+    }
+
+    /**
+     * Add CORS headers to response
+     */
+    private function addCorsHeaders()
+    {
+        if (request()->isMethod('OPTIONS')) {
+            header('Access-Control-Allow-Origin: *');
+            header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+            header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, X-CSRF-TOKEN');
+            header('Access-Control-Allow-Credentials: true');
+            exit(0);
+        }
+    }
+
+    /**
+     * Create JSON response with CORS headers
+     */
+    private function jsonResponse($data, $status = 200)
+    {
+        $response = response()->json($data, $status);
+
+        $response->header('Access-Control-Allow-Origin', '*');
+        $response->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        $response->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-CSRF-TOKEN');
+        $response->header('Access-Control-Allow-Credentials', 'true');
+
+        return $response;
     }
 
     /**
@@ -25,13 +57,13 @@ class ForexController extends Controller
             $baseCurrency = $request->get('base', 'USD');
             $rates = $this->forexService->getCurrentRates($baseCurrency);
 
-            return response()->json([
+            return $this->jsonResponse([
                 'success' => true,
                 'data' => $rates,
                 'timestamp' => now()->toISOString()
             ]);
         } catch (\Exception $e) {
-            return response()->json([
+            return $this->jsonResponse([
                 'success' => false,
                 'message' => 'Failed to fetch rates',
                 'error' => $e->getMessage()
@@ -48,13 +80,13 @@ class ForexController extends Controller
             $carbonDate = Carbon::parse($date);
             $rates = $this->forexService->getRatesByDate($carbonDate);
 
-            return response()->json([
+            return $this->jsonResponse([
                 'success' => true,
                 'data' => $rates,
                 'date' => $carbonDate->toDateString()
             ]);
         } catch (\Exception $e) {
-            return response()->json([
+            return $this->jsonResponse([
                 'success' => false,
                 'message' => 'Failed to fetch historical rates',
                 'error' => $e->getMessage()
@@ -72,21 +104,26 @@ class ForexController extends Controller
             $to = $request->to;
             $amount = $request->amount;
 
-            $result = $this->forexService->convertCurrency($from, $to, $amount);
+            // Get user ID if authenticated (for now, set to null)
+            $userId = null; // TODO: Implement authentication
+            $ipAddress = $request->ip();
+            $userAgent = $request->userAgent();
 
-            return response()->json([
+            $result = $this->forexService->convertCurrency($from, $to, $amount, $userId, $ipAddress, $userAgent);
+
+            return $this->jsonResponse([
                 'success' => true,
                 'data' => [
                     'from' => $from,
                     'to' => $to,
                     'amount' => $amount,
                     'converted_amount' => $result['converted_amount'],
-                    'exchange_rate' => $result['rate'],
+                    'rate' => $result['rate'],
                     'timestamp' => now()->toISOString()
                 ]
             ]);
         } catch (\Exception $e) {
-            return response()->json([
+            return $this->jsonResponse([
                 'success' => false,
                 'message' => 'Conversion failed',
                 'error' => $e->getMessage()
@@ -102,12 +139,12 @@ class ForexController extends Controller
         try {
             $currencies = $this->forexService->getAvailableCurrencies();
 
-            return response()->json([
+            return $this->jsonResponse([
                 'success' => true,
                 'data' => $currencies
             ]);
         } catch (\Exception $e) {
-            return response()->json([
+            return $this->jsonResponse([
                 'success' => false,
                 'message' => 'Failed to fetch currencies',
                 'error' => $e->getMessage()
@@ -124,13 +161,13 @@ class ForexController extends Controller
             $days = $request->get('days', 30);
             $history = $this->forexService->getHistoricalData($from, $to, $days);
 
-            return response()->json([
+            return $this->jsonResponse([
                 'success' => true,
                 'data' => $history,
                 'pair' => "$from/$to"
             ]);
         } catch (\Exception $e) {
-            return response()->json([
+            return $this->jsonResponse([
                 'success' => false,
                 'message' => 'Failed to fetch historical data',
                 'error' => $e->getMessage()

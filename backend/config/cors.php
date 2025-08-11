@@ -19,7 +19,12 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:3000', 'http://127.0.0.1:3000'],
+    'allowed_origins' => [
+        'http://localhost:3000',  // React frontend
+        'http://127.0.0.1:3000',
+        'http://localhost:5173',  // Vite dev server
+        'http://127.0.0.1:5173',
+    ],
 
     'allowed_origins_patterns' => [],
 
@@ -27,8 +32,8 @@ return [
 
     'exposed_headers' => [],
 
-    'max_age' => 0,
+    'max_age' => 86400, // Cache preflight for 24 hours
 
-    'supports_credentials' => false,
+    'supports_credentials' => false, // PENTING: Ubah ke true jika frontend kirim cookies/auth
 
 ];

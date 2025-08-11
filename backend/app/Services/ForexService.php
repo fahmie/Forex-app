@@ -5,6 +5,9 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
+use App\Models\Currency;
+use App\Models\ExchangeRate;
+use App\Models\CurrencyConversion;
 
 class ForexService
 {
@@ -74,7 +77,7 @@ class ForexService
     /**
      * Convert currency
      */
-    public function convertCurrency($from, $to, $amount)
+    public function convertCurrency($from, $to, $amount, $userId = null, $ipAddress = null, $userAgent = null)
     {
         if ($from === $to) {
             return [
@@ -83,14 +86,37 @@ class ForexService
             ];
         }
 
-        $rates = $this->getCurrentRates($from);
+        // Try to get rate from database first
+        $exchangeRate = ExchangeRate::forPair($from, $to)
+            ->forDate(Carbon::today())
+            ->first();
 
-        if (!isset($rates['rates'][$to])) {
-            throw new \Exception("Currency pair {$from}/{$to} not found");
+        if ($exchangeRate) {
+            $rate = $exchangeRate->rate;
+        } else {
+            // Fallback to mock data
+            $rates = $this->getCurrentRates($from);
+            if (!isset($rates['rates'][$to])) {
+                throw new \Exception("Currency pair {$from}/{$to} not found");
+            }
+            $rate = $rates['rates'][$to];
         }
 
-        $rate = $rates['rates'][$to];
         $convertedAmount = round($amount * $rate, 4);
+
+        // Log the conversion
+        if ($userId || $ipAddress) {
+            CurrencyConversion::create([
+                'user_id' => $userId,
+                'from_currency' => $from,
+                'to_currency' => $to,
+                'from_amount' => $amount,
+                'to_amount' => $convertedAmount,
+                'exchange_rate' => $rate,
+                'ip_address' => $ipAddress,
+                'user_agent' => $userAgent,
+            ]);
+        }
 
         return [
             'converted_amount' => $convertedAmount,
@@ -103,6 +129,18 @@ class ForexService
      */
     public function getAvailableCurrencies()
     {
+        // Try to get from database first
+        $currencies = Currency::active()->get();
+
+        if ($currencies->isNotEmpty()) {
+            $result = [];
+            foreach ($currencies as $currency) {
+                $result[$currency->code] = $currency->name;
+            }
+            return $result;
+        }
+
+        // Fallback to hardcoded data if database is empty
         return [
             'USD' => 'US Dollar',
             'EUR' => 'Euro',
